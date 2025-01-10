@@ -177,20 +177,25 @@
 
         function checkWinCondition() {
             const cards = ["card1", "card2", "card3"];
-            let allCellsFilled = true;
-
-            cards.forEach((cardId) => {
+            
+            // بررسی این که آیا یک کارت پر شده است یا نه
+            for (let cardId of cards) {
                 const card = document.getElementById(cardId);
                 const cells = card.getElementsByClassName("cell");
+                
+                let allCellsFilled = true;
+                
                 Array.from(cells).forEach((cell) => {
                     if (!cell.classList.contains("selected") && cell.classList.contains("filled")) {
                         allCellsFilled = false;
                     }
                 });
-            });
 
-            if (allCellsFilled) {
-                endGame(true);
+                // اگر یک کارت تمام سلول‌هایش پر شد، بازی تمام می‌شود و کاربر برنده می‌شود
+                if (allCellsFilled) {
+                    endGame(true); // بازی به پایان می‌رسد و کاربر برنده می‌شود
+                    return; // بعد از پیدا کردن کارت برنده، از تابع خارج می‌شود
+                }
             }
         }
 
