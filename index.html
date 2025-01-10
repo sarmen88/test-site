@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بازی دبرنا</title>
+    <title>بازی دبرنا - ۳ کارت</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,10 +21,10 @@
 
         .cards-container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 20px auto;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 20px;
+            margin: 20px auto;
         }
 
         .card {
@@ -143,12 +143,13 @@
     </style>
 </head>
 <body>
-    <h1>بازی دبرنا</h1>
+    <h1>بازی دبرنا - ۳ کارت</h1>
     <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
     <div class="timer" id="timer">زمان باقی‌مانده: 06:40</div>
     <div class="cards-container">
         <div class="card" id="card1"></div>
         <div class="card" id="card2"></div>
+        <div class="card" id="card3"></div>
     </div>
     <div class="number-display" id="numberDisplay">--</div>
     <button class="start-btn" id="startButton">شروع بازی</button>
@@ -215,13 +216,21 @@
             if (gameFinished) return;
             if (selectedNumbers.includes(number)) {
                 cell.classList.add("selected");
+                if (checkCardCompletion(cardId)) {
+                    endGame(true);
+                }
             } else {
                 cell.classList.add("missed");
                 setTimeout(() => cell.classList.remove("missed"), 1000);
             }
         }
 
-        // تولید عدد تصادفی
+        function checkCardCompletion(cardId) {
+            const card = document.getElementById(cardId);
+            const cells = Array.from(card.children);
+            return cells.filter(cell => cell.classList.contains("selected")).length === 15;
+        }
+
         function generateRandomNumber() {
             if (gameFinished) return;
             const number = Math.floor(Math.random() * 90) + 1;
@@ -258,6 +267,9 @@
                 userBalance = 0;
                 updateBalance(0);
             }
+
+            startButton.style.display = "block";
+            startButton.textContent = "شروع مجدد";
         }
 
         startButton.onclick = () => {
@@ -272,6 +284,7 @@
             timeLeft = 400;
             generateCard("card1");
             generateCard("card2");
+            generateCard("card3");
             startTimer();
             numberInterval = setInterval(generateRandomNumber, 5000);
         };
