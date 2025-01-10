@@ -3,69 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بازی دبرنا - ۳ کارت</title>
+    <title>بازی دبرنا</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             direction: rtl;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
         }
-
-        h1 {
-            font-size: 2em;
-            margin: 10px 0;
-        }
-
         .cards-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 20px;
             margin: 20px auto;
         }
-
         .card {
             display: grid;
-            grid-template-columns: repeat(9, 1fr);
+            grid-template-columns: repeat(9, 60px);
             gap: 5px;
-            width: 100%;
-            max-width: 90vw;
+            justify-content: center;
+            margin: 20px auto;
         }
-
         .cell {
-            width: 100%;
-            aspect-ratio: 1;
+            width: 60px;
+            height: 60px;
             text-align: center;
             vertical-align: middle;
             border: 1px solid #333;
-            font-size: 1rem;
-            line-height: normal;
+            font-size: 20px;
+            line-height: 60px;
             background-color: #f8f9fa;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
-
         .cell.filled {
             background-color: #e9ecef;
         }
-
         .cell.selected {
             background-color: #4caf50;
             color: white;
         }
-
         .cell.missed {
-            background-color: #f44336;
+            background-color: red;
             color: white;
         }
-
         .number-display {
-            font-size: 1.5em;
+            font-size: 30px;
             font-weight: bold;
             margin: 20px 0;
             background-color: #007bff;
@@ -74,76 +52,30 @@
             padding: 10px 20px;
             border-radius: 50%;
         }
-
-        .score, .timer {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-
         .score {
-            color: #333;
+            font-size: 20px;
+            margin: 10px;
         }
-
         .timer {
-            color: #dc3545;
+            font-size: 25px;
             font-weight: bold;
+            margin: 15px;
+            color: #dc3545;
         }
-
         .start-btn {
-            font-size: 1em;
+            font-size: 18px;
             padding: 10px 20px;
-            margin: 20px 0;
+            margin: 20px;
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-
-        /* استایل واکنش‌گرا */
-        @media (max-width: 768px) {
-            .cell {
-                font-size: 0.9rem;
-            }
-
-            .number-display {
-                font-size: 1.2em;
-                padding: 10px;
-            }
-
-            .score, .timer {
-                font-size: 1em;
-            }
-
-            .start-btn {
-                font-size: 0.9em;
-                padding: 8px 16px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .cell {
-                font-size: 0.8rem;
-            }
-
-            .number-display {
-                font-size: 1em;
-                padding: 8px;
-            }
-
-            .score, .timer {
-                font-size: 0.9em;
-            }
-
-            .start-btn {
-                font-size: 0.8em;
-                padding: 6px 12px;
-            }
-        }
     </style>
 </head>
 <body>
-    <h1>بازی دبرنا - ۳ کارت</h1>
+    <h1>بازی دبرنا</h1>
     <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
     <div class="timer" id="timer">زمان باقی‌مانده: 06:40</div>
     <div class="cards-container">
@@ -155,15 +87,15 @@
     <button class="start-btn" id="startButton">شروع بازی</button>
 
     <script>
-        let userBalance = 100000; // موجودی اولیه کاربر
+        let userBalance = 100000; // موجودی اولیه کاربر به تومان
         const scoreDisplay = document.getElementById("score");
         const timerDisplay = document.getElementById("timer");
         const startButton = document.getElementById("startButton");
-        let selectedNumbers = [];
-        let timer;
-        let numberInterval;
-        let timeLeft = 400; // 6 دقیقه و 40 ثانیه
-        let gameFinished = false;
+        let selectedNumbers = []; // ذخیره تمامی اعداد تصادفی
+        let gameFinished = false; // نشان‌دهنده پایان بازی
+        let timeLeft = 400; // زمان باقی‌مانده: ۶ دقیقه و ۴۰ ثانیه (به ثانیه)
+        let timerInterval; // تایمر بازی
+        let numberInterval; // فاصله تولید اعداد تصادفی
 
         // به‌روزرسانی موجودی
         function updateBalance(amount) {
@@ -171,32 +103,33 @@
             scoreDisplay.textContent = `موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
         }
 
-        // تولید کارت
+        // تولید کارت دبرنا
         function generateCard(cardId) {
             const card = document.getElementById(cardId);
-            card.innerHTML = "";
+            card.innerHTML = ""; // پاک کردن کارت قبلی
 
             const columns = [
-                Array.from({ length: 9 }, (_, i) => i + 1),
-                Array.from({ length: 10 }, (_, i) => i + 10),
-                Array.from({ length: 10 }, (_, i) => i + 20),
-                Array.from({ length: 10 }, (_, i) => i + 30),
-                Array.from({ length: 10 }, (_, i) => i + 40),
-                Array.from({ length: 10 }, (_, i) => i + 50),
-                Array.from({ length: 10 }, (_, i) => i + 60),
-                Array.from({ length: 10 }, (_, i) => i + 70),
-                Array.from({ length: 11 }, (_, i) => i + 80),
+                Array.from({ length: 9 }, (_, i) => i + 1), // ستون 1: 1 تا 9
+                Array.from({ length: 10 }, (_, i) => i + 10), // ستون 2: 10 تا 19
+                Array.from({ length: 10 }, (_, i) => i + 20), // ستون 3: 20 تا 29
+                Array.from({ length: 10 }, (_, i) => i + 30), // ستون 4: 30 تا 39
+                Array.from({ length: 10 }, (_, i) => i + 40), // ستون 5: 40 تا 49
+                Array.from({ length: 10 }, (_, i) => i + 50), // ستون 6: 50 تا 59
+                Array.from({ length: 10 }, (_, i) => i + 60), // ستون 7: 60 تا 69
+                Array.from({ length: 10 }, (_, i) => i + 70), // ستون 8: 70 تا 79
+                Array.from({ length: 11 }, (_, i) => i + 80), // ستون 9: 80 تا 90
             ];
 
-            columns.forEach((column) => column.sort(() => Math.random() - 0.5));
+            columns.forEach((column) => column.sort(() => Math.random() - 0.5)); // تصادفی‌سازی اعداد هر ستون
 
             const rows = Array.from({ length: 3 }, () => Array(9).fill(null));
             rows.forEach((row) => {
                 const filledColumns = Array.from({ length: 9 }, (_, i) => i)
                     .sort(() => Math.random() - 0.5)
-                    .slice(0, 5);
+                    .slice(0, 5); // انتخاب 5 ستون تصادفی
+
                 filledColumns.forEach((col) => {
-                    row[col] = columns[col].pop();
+                    row[col] = columns[col].pop(); // برداشتن عدد از ستون
                 });
             });
 
@@ -212,82 +145,95 @@
             });
         }
 
+        // مدیریت کلیک روی خانه‌ها
         function handleCellClick(cell, number, cardId) {
-            if (gameFinished) return;
+            if (gameFinished) return; // اگر بازی تمام شده، کلیک‌ها بی‌اثر شوند
             if (selectedNumbers.includes(number)) {
                 cell.classList.add("selected");
-                if (checkCardCompletion(cardId)) {
-                    endGame(true);
-                }
             } else {
                 cell.classList.add("missed");
-                setTimeout(() => cell.classList.remove("missed"), 1000);
+                setTimeout(() => cell.classList.remove("missed"), 1000); // حذف رنگ قرمز بعد از 1 ثانیه
+            }
+            checkWinCondition(); // بررسی برنده شدن بعد از هر کلیک
+        }
+
+        // بررسی برنده شدن کاربر
+        function checkWinCondition() {
+            const cards = ["card1", "card2", "card3"];
+            let allCellsFilled = true;
+
+            cards.forEach((cardId) => {
+                const card = document.getElementById(cardId);
+                const cells = card.getElementsByClassName("cell");
+                Array.from(cells).forEach((cell) => {
+                    if (!cell.classList.contains("selected") && cell.classList.contains("filled")) {
+                        allCellsFilled = false;
+                    }
+                });
+            });
+
+            if (allCellsFilled) {
+                endGame(true); // اگر تمام خانه‌ها پر شدند، بازی تمام است و کاربر برنده شده
             }
         }
 
-        function checkCardCompletion(cardId) {
-            const card = document.getElementById(cardId);
-            const cells = Array.from(card.children);
-            return cells.filter(cell => cell.classList.contains("selected")).length === 15;
-        }
-
-        function generateRandomNumber() {
-            if (gameFinished) return;
-            const number = Math.floor(Math.random() * 90) + 1;
-            if (!selectedNumbers.includes(number)) {
-                selectedNumbers.push(number);
-                document.getElementById("numberDisplay").textContent = number;
-            } else {
-                generateRandomNumber();
-            }
-        }
-
+        // شروع تایمر
         function startTimer() {
-            timer = setInterval(() => {
+            timerInterval = setInterval(() => {
                 timeLeft--;
                 const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
                 const seconds = (timeLeft % 60).toString().padStart(2, '0');
                 timerDisplay.textContent = `زمان باقی‌مانده: ${minutes}:${seconds}`;
                 if (timeLeft <= 0) {
-                    endGame(false);
+                    clearInterval(timerInterval);
+                    endGame(false); // پایان بازی در صورت اتمام زمان
                 }
             }, 1000);
         }
 
-        function endGame(isWin) {
-            clearInterval(timer);
-            clearInterval(numberInterval);
-            gameFinished = true;
-
-            if (isWin) {
-                alert("تبریک! شما برنده شدید!");
-                updateBalance(userBalance);
+        // تولید عدد تصادفی
+        function generateRandomNumber() {
+            if (gameFinished) return;
+            const number = Math.floor(Math.random() * 90) + 1; // عدد بین 1 تا 90
+            if (!selectedNumbers.includes(number)) {
+                selectedNumbers.push(number);
+                document.getElementById("numberDisplay").textContent = number;
             } else {
-                alert("بازی به پایان رسید!");
-                userBalance = 0;
-                updateBalance(0);
+                generateRandomNumber(); // اگر عدد تکراری بود دوباره تلاش کن
             }
-
-            startButton.style.display = "block";
-            startButton.textContent = "شروع مجدد";
         }
 
+        // شروع یا شروع مجدد بازی
         startButton.onclick = () => {
             if (userBalance <= 0) {
-                alert("موجودی کافی نیست!");
+                alert("موجودی شما برای ادامه بازی کافی نیست!");
                 return;
             }
 
-            startButton.style.display = "none";
-            selectedNumbers = [];
-            gameFinished = false;
-            timeLeft = 400;
-            generateCard("card1");
-            generateCard("card2");
-            generateCard("card3");
-            startTimer();
-            numberInterval = setInterval(generateRandomNumber, 5000);
+            startButton.style.display = "none"; // محو کردن دکمه شروع بازی
+            selectedNumbers = []; // پاک کردن اعداد قبلی
+            gameFinished = false; // بازنشانی وضعیت بازی
+            timeLeft = 400; // بازنشانی تایمر
+            generateCard("card1"); // تولید کارت اول
+            generateCard("card2"); // تولید کارت دوم
+            generateCard("card3"); // تولید کارت سوم
+            startTimer(); // شروع تایمر
+            numberInterval = setInterval(generateRandomNumber, 5000); // تولید عدد تصادفی هر 5 ثانیه
         };
+
+        // پایان بازی
+        function endGame(isWin) {
+            gameFinished = true;
+            clearInterval(numberInterval); // توقف تولید اعداد تصادفی
+            if (isWin) {
+                updateBalance(50000); // جایزه 50 هزار تومان برای تکمیل کارت
+                alert("تبریک! شما کارت را تکمیل کردید. ۵۰,۰۰۰ تومان به موجودی شما افزوده شد.");
+            } else {
+                updateBalance(-50000); // کاهش 50 هزار تومان در صورت باخت
+                alert("زمان شما تمام شد! شما باختید.");
+            }
+            startButton.style.display = "block"; // نمایش مجدد دکمه شروع بازی
+        }
     </script>
 </body>
 </html>
