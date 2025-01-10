@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بازی دبرنا</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin: 10px 0;
+        }
+
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px auto;
+            gap: 20px;
+        }
+
+        .card {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 90vw;
+        }
+
+        .cell {
+            width: 100%;
+            aspect-ratio: 1;
+            text-align: center;
+            vertical-align: middle;
+            border: 1px solid #333;
+            font-size: 1rem;
+            line-height: normal;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell.filled {
+            background-color: #e9ecef;
+        }
+
+        .cell.selected {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .cell.missed {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .number-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            background-color: #007bff;
+            color: white;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 50%;
+        }
+
+        .score, .timer {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .score {
+            color: #333;
+        }
+
+        .timer {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .start-btn {
+            font-size: 1em;
+            padding: 10px 20px;
+            margin: 20px 0;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* استایل واکنش‌گرا */
+        @media (max-width: 768px) {
+            .cell {
+                font-size: 0.9rem;
+            }
+
+            .number-display {
+                font-size: 1.2em;
+                padding: 10px;
+            }
+
+            .score, .timer {
+                font-size: 1em;
+            }
+
+            .start-btn {
+                font-size: 0.9em;
+                padding: 8px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cell {
+                font-size: 0.8rem;
+            }
+
+            .number-display {
+                font-size: 1em;
+                padding: 8px;
+            }
+
+            .score, .timer {
+                font-size: 0.9em;
+            }
+
+            .start-btn {
+                font-size: 0.8em;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>بازی دبرنا</h1>
+    <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
+    <div class="timer" id="timer">زمان باقی‌مانده: 06:40</div>
+    <div class="cards-container">
+        <div class="card" id="card1"></div>
+        <div class="card" id="card2"></div>
+    </div>
+    <div class="number-display" id="numberDisplay">--</div>
+    <button class="start-btn" id="startButton">شروع بازی</button>
+
+    <script>
+        let userBalance = 100000; // موجودی اولیه کاربر
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer");
+        const startButton = document.getElementById("startButton");
+        let selectedNumbers = [];
+        let timer;
+        let numberInterval;
+        let timeLeft = 400; // 6 دقیقه و 40 ثانیه
+        let gameFinished = false;
+
+        // به‌روزرسانی موجودی
+        function updateBalance(amount) {
+            userBalance += amount;
+            scoreDisplay.textContent = `موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
+        }
+
+        // تولید کارت
+        function generateCard(cardId) {
+            const card = document.getElementById(cardId);
+            card.innerHTML = "";
+
+            const columns = [
+                Array.from({ length: 9 }, (_, i) => i + 1),
+                Array.from({ length: 10 }, (_, i) => i + 10),
+                Array.from({ length: 10 }, (_, i) => i + 20),
+                Array.from({ length: 10 }, (_, i) => i + 30),
+                Array.from({ length: 10 }, (_, i) => i + 40),
+                Array.from({ length: 10 }, (_, i) => i + 50),
+                Array.from({ length: 10 }, (_, i) => i + 60),
+                Array.from({ length: 10 }, (_, i) => i + 70),
+                Array.from({ length: 11 }, (_, i) => i + 80),
+            ];
+
+            columns.forEach((column) => column.sort(() => Math.random() - 0.5));
+
+            const rows = Array.from({ length: 3 }, () => Array(9).fill(null));
+            rows.forEach((row) => {
+                const filledColumns = Array.from({ length: 9 }, (_, i) => i)
+                    .sort(() => Math.random() - 0.5)
+                    .slice(0, 5);
+                filledColumns.forEach((col) => {
+                    row[col] = columns[col].pop();
+                });
+            });
+
+            rows.flat().forEach((num) => {
+                const cell = document.createElement("div");
+                cell.classList.add("cell");
+                if (num !== null) {
+                    cell.textContent = num;
+                    cell.classList.add("filled");
+                }
+                cell.onclick = () => handleCellClick(cell, num, cardId);
+                card.appendChild(cell);
+            });
+        }
+
+        function handleCellClick(cell, number, cardId) {
+            if (gameFinished) return;
+            if (selectedNumbers.includes(number)) {
+                cell.classList.add("selected");
+            } else {
+                cell.classList.add("missed");
+                setTimeout(() => cell.classList.remove("missed"), 1000);
+            }
+        }
+
+        // تولید عدد تصادفی
+        function generateRandomNumber() {
+            if (gameFinished) return;
+            const number = Math.floor(Math.random() * 90) + 1;
+            if (!selectedNumbers.includes(number)) {
+                selectedNumbers.push(number);
+                document.getElementById("numberDisplay").textContent = number;
+            } else {
+                generateRandomNumber();
+            }
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                const seconds = (timeLeft % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `زمان باقی‌مانده: ${minutes}:${seconds}`;
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function endGame(isWin) {
+            clearInterval(timer);
+            clearInterval(numberInterval);
+            gameFinished = true;
+
+            if (isWin) {
+                alert("تبریک! شما برنده شدید!");
+                updateBalance(userBalance);
+            } else {
+                alert("بازی به پایان رسید!");
+                userBalance = 0;
+                updateBalance(0);
+            }
+        }
+
+        startButton.onclick = () => {
+            if (userBalance <= 0) {
+                alert("موجودی کافی نیست!");
+                return;
+            }
+
+            startButton.style.display = "none";
+            selectedNumbers = [];
+            gameFinished = false;
+            timeLeft = 400;
+            generateCard("card1");
+            generateCard("card2");
+            startTimer();
+            numberInterval = setInterval(generateRandomNumber, 5000);
+        };
+    </script>
+</body>
+</html>
