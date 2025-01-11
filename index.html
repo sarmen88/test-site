@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بازی دبرنا</title>
     <style>
+        /* تمامی استایل‌های قبلی */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -17,6 +18,37 @@
             margin-bottom: 20px;
             color: #333;
         }
+        .login-container, .game-container {
+            display: none;
+        }
+        .visible {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input {
+            padding: 10px;
+            font-size: 1em;
+            width: 80%;
+            max-width: 300px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            font-size: 1em;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
         .cards-container {
             display: flex;
             flex-direction: column;
@@ -24,204 +56,137 @@
             gap: 30px;
             margin-top: 20px;
         }
-        .card {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            gap: 5px;
-            width: 90%;
-            max-width: 400px;
-        }
-        .cell {
-            width: 100%;
-            aspect-ratio: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2em;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-        .cell.filled {
-            background-color: #f0f0f0;
-        }
-        .cell.selected {
-            background-color: #4caf50;
-            color: #fff;
-        }
-        .cell.missed {
-            background-color: red;
-            color: white;
-        }
-        .number-display {
-            font-size: 2em;
-            font-weight: bold;
-            margin: 20px auto;
-            background-color: #007bff;
-            color: white;
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 50%;
-        }
-        .score, .timer {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-        .timer {
-            color: #d9534f;
-            font-weight: bold;
-        }
-        .start-btn {
-            font-size: 1.2em;
-            padding: 10px 20px;
+        .deposit-btn {
             margin-top: 20px;
-            background-color: #28a745;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        .start-btn:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        @media (max-width: 768px) {
-            .cell {
-                font-size: 1em;
-            }
-            .number-display {
-                font-size: 1.5em;
-                padding: 8px 16px;
-            }
-        }
     </style>
 </head>
 <body>
     <h1>بازی دبرنا</h1>
-    <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
-    <div class="timer" id="timer">زمان باقی‌مانده: 06:40</div>
-    <div class="cards-container">
-        <div class="card" id="card1"></div>
-        <div class="card" id="card2"></div>
-        <div class="card" id="card3"></div>
+    <!-- فرم ورود -->
+    <div class="login-container visible" id="loginContainer">
+        <div class="form-group">
+            <input type="text" id="mobileInput" placeholder="شماره موبایل">
+        </div>
+        <div class="form-group">
+            <input type="password" id="passwordInput" placeholder="رمز عبور">
+        </div>
+        <button id="loginButton">ورود</button>
     </div>
-    <div class="number-display" id="numberDisplay">--</div>
-    <button class="start-btn" id="startButton">شروع بازی</button>
+
+    <!-- محتوای بازی -->
+    <div class="game-container" id="gameContainer">
+        <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
+        <div class="timer" id="timer">زمان باقی‌مانده: 06:40</div>
+        <div class="cards-container">
+            <div class="card" id="card1"></div>
+            <div class="card" id="card2"></div>
+            <div class="card" id="card3"></div>
+        </div>
+        <div class="number-display" id="numberDisplay">--</div>
+        <button class="start-btn" id="startButton">شروع بازی</button>
+        <button class="deposit-btn" id="depositButton">افزایش موجودی</button>
+    </div>
 
     <script>
-        let userBalance = 100000; // موجودی اولیه
+        let userBalance = 0; // موجودی کاربر
         const scoreDisplay = document.getElementById("score");
         const timerDisplay = document.getElementById("timer");
         const startButton = document.getElementById("startButton");
+        const depositButton = document.getElementById("depositButton");
         let selectedNumbers = [];
         let gameFinished = false;
         let timeLeft = 400;
         let timerInterval;
         let numberInterval;
 
+        // فرم ورود
+        const loginContainer = document.getElementById("loginContainer");
+        const gameContainer = document.getElementById("gameContainer");
+        const mobileInput = document.getElementById("mobileInput");
+        const passwordInput = document.getElementById("passwordInput");
+        const loginButton = document.getElementById("loginButton");
+
+        loginButton.onclick = () => {
+            const mobile = mobileInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!mobile || !password) {
+                alert("لطفاً شماره موبایل و رمز عبور را وارد کنید.");
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem("users") || "{}");
+
+            if (users[mobile]) {
+                if (users[mobile].password === password) {
+                    userBalance = users[mobile].balance;
+                    showGame();
+                } else {
+                    alert("رمز عبور اشتباه است.");
+                }
+            } else {
+                users[mobile] = { password, balance: 100000 };
+                localStorage.setItem("users", JSON.stringify(users));
+                userBalance = 100000;
+                alert("ثبت‌نام با موفقیت انجام شد! ۱۰۰,۰۰۰ تومان به موجودی شما اضافه شد.");
+                showGame();
+            }
+        };
+
+        function showGame() {
+            loginContainer.classList.remove("visible");
+            gameContainer.classList.add("visible");
+            updateBalance(0);
+        }
+
         function updateBalance(amount) {
             userBalance += amount;
             scoreDisplay.textContent = `موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
+            saveUserBalance();
         }
 
-        function generateCard(cardId) {
-            const card = document.getElementById(cardId);
-            card.innerHTML = "";
-
-            const columns = [
-                Array.from({ length: 11 }, (_, i) => i + 80),
-                Array.from({ length: 10 }, (_, i) => i + 70),
-                Array.from({ length: 10 }, (_, i) => i + 60),
-                Array.from({ length: 10 }, (_, i) => i + 50),
-                Array.from({ length: 10 }, (_, i) => i + 40),
-                Array.from({ length: 10 }, (_, i) => i + 30),
-                Array.from({ length: 10 }, (_, i) => i + 20),
-                Array.from({ length: 10 }, (_, i) => i + 10),
-                Array.from({ length: 9 }, (_, i) => i + 1),
-            ];
-
-            columns.forEach((column) => column.sort(() => Math.random() - 0.5));
-
-            const rows = Array.from({ length: 3 }, () => Array(9).fill(null));
-            rows.forEach((row) => {
-                const filledColumns = Array.from({ length: 9 }, (_, i) => i)
-                    .sort(() => Math.random() - 0.5)
-                    .slice(0, 5);
-                filledColumns.forEach((col) => {
-                    row[col] = columns[col].pop();
-                });
-            });
-
-            rows.flat().forEach((num) => {
-                const cell = document.createElement("div");
-                cell.classList.add("cell");
-                if (num !== null) {
-                    cell.textContent = num;
-                    cell.classList.add("filled");
-                }
-                cell.onclick = () => handleCellClick(cell, num);
-                card.appendChild(cell);
-            });
-        }
-
-        function handleCellClick(cell, number) {
-            if (gameFinished) return;
-            if (selectedNumbers.includes(number)) {
-                cell.classList.add("selected");
-            } else {
-                cell.classList.add("missed");
-                setTimeout(() => cell.classList.remove("missed"), 1000);
+        function saveUserBalance() {
+            const mobile = mobileInput.value.trim();
+            const users = JSON.parse(localStorage.getItem("users") || "{}");
+            if (users[mobile]) {
+                users[mobile].balance = userBalance;
+                localStorage.setItem("users", JSON.stringify(users));
             }
-            checkWinCondition();
         }
 
-        function checkWinCondition() {
-            const cards = ["card1", "card2", "card3"];
-            
-            // بررسی این که آیا یک کارت پر شده است یا نه
-            for (let cardId of cards) {
-                const card = document.getElementById(cardId);
-                const cells = card.getElementsByClassName("cell");
-                
-                let allCellsFilled = true;
-                
-                Array.from(cells).forEach((cell) => {
-                    if (!cell.classList.contains("selected") && cell.classList.contains("filled")) {
-                        allCellsFilled = false;
-                    }
-                });
+        // افزودن دکمه افزایش موجودی
+        depositButton.onclick = () => {
+            const mobile = mobileInput.value.trim();
+            if (!mobile) {
+                alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+                return;
+            }
 
-                // اگر یک کارت تمام سلول‌هایش پر شد، بازی تمام می‌شود و کاربر برنده می‌شود
-                if (allCellsFilled) {
-                    endGame(true); // بازی به پایان می‌رسد و کاربر برنده می‌شود
-                    return; // بعد از پیدا کردن کارت برنده، از تابع خارج می‌شود
+            const depositLink = `https://zarinp.al/toto?mobile=${mobile}`;
+            window.location.href = depositLink;
+        };
+
+        // بررسی پرداخت موفق از پارامترهای URL
+        function checkDeposit() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has("amount")) {
+                const depositAmount = parseInt(urlParams.get("amount"));
+                if (!isNaN(depositAmount) && depositAmount > 0) {
+                    updateBalance(depositAmount);
+                    alert(`مبلغ ${depositAmount.toLocaleString('fa-IR')} تومان به موجودی شما اضافه شد!`);
                 }
             }
         }
 
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-                const seconds = (timeLeft % 60).toString().padStart(2, '0');
-                timerDisplay.textContent = `زمان باقی‌مانده: ${minutes}:${seconds}`;
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    endGame(false);
-                }
-            }, 1000);
-        }
-
-        function generateRandomNumber() {
-            if (gameFinished) return;
-            const number = Math.floor(Math.random() * 90) + 1;
-            if (!selectedNumbers.includes(number)) {
-                selectedNumbers.push(number);
-                document.getElementById("numberDisplay").textContent = number;
-            } else {
-                generateRandomNumber();
-            }
-        }
+        document.addEventListener("DOMContentLoaded", checkDeposit);
 
         startButton.onclick = () => {
             if (userBalance <= 0) {
@@ -229,7 +194,7 @@
                 return;
             }
 
-            startButton.style.display = "none"; // مخفی کردن دکمه شروع
+            startButton.style.display = "none"; 
             selectedNumbers = [];
             gameFinished = false;
             timeLeft = 400;
@@ -251,7 +216,7 @@
                 updateBalance(-50000);
                 alert("زمان شما تمام شد! شما باختید.");
             }
-            startButton.style.display = "block"; // نمایش دوباره دکمه شروع
+            startButton.style.display = "block"; 
         }
     </script>
 </body>
