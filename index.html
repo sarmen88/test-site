@@ -44,6 +44,11 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .score {
+            margin: 20px 0;
+            font-size: 1.2em;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -73,6 +78,7 @@
         const scoreDisplay = document.getElementById("score");
         let userBalance = 100000;
 
+        // ورود کاربر
         loginButton.onclick = () => {
             const mobile = mobileInput.value.trim();
             const password = passwordInput.value.trim();
@@ -96,15 +102,19 @@
             scoreDisplay.textContent = `موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
         }
 
+        // شبیه‌سازی افزایش موجودی
         depositButton.onclick = () => {
             const callbackUrl = encodeURIComponent(window.location.href);
-            const testAmount = 50000; // مبلغ تست
-            alert(`شما به صفحه پرداخت فرضی هدایت شدید.\nپس از پرداخت موفق، موجودی شما به‌روزرسانی می‌شود.`);
-            
-            // شبیه‌سازی موفقیت پرداخت
-            window.location.href = `${callbackUrl}?Status=OK&Amount=${testAmount}`;
+            const testAmount = 50000; // مبلغ تستی
+            alert(`شما به صفحه پرداخت فرضی هدایت شدید. \nپس از پرداخت موفق، به صفحه باز خواهید گشت.`);
+
+            // شبیه‌سازی بازگشت از صفحه پرداخت
+            setTimeout(() => {
+                window.location.href = `${window.location.pathname}?Status=OK&Amount=${testAmount}`;
+            }, 1000);
         };
 
+        // بررسی پارامترهای بازگشت از پرداخت
         function checkDeposit() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has("Status") && urlParams.get("Status") === "OK" && urlParams.has("Amount")) {
@@ -112,11 +122,13 @@
                 if (!isNaN(depositAmount) && depositAmount > 0) {
                     updateBalance(depositAmount);
                     alert(`مبلغ ${depositAmount.toLocaleString('fa-IR')} تومان به موجودی شما اضافه شد!`);
+                    // حذف پارامترها از URL
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
             }
         }
 
+        // بررسی پرداخت هنگام بارگذاری صفحه
         document.addEventListener("DOMContentLoaded", checkDeposit);
     </script>
 </body>
