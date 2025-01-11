@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بازی دبرنا</title>
     <style>
-        /* تمامی استایل‌های قبلی */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -45,32 +44,10 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        button:disabled {
-            background-color: #6c757d;
-            cursor: not-allowed;
-        }
-        .cards-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px;
-            margin-top: 20px;
-        }
-        .deposit-btn {
-            margin-top: 20px;
-            font-size: 1.1em;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
     <h1>بازی دبرنا</h1>
-    <!-- فرم ورود -->
     <div class="login-container visible" id="loginContainer">
         <div class="form-group">
             <input type="text" id="mobileInput" placeholder="شماره موبایل">
@@ -81,38 +58,20 @@
         <button id="loginButton">ورود</button>
     </div>
 
-    <!-- محتوای بازی -->
     <div class="game-container" id="gameContainer">
         <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
-        <div class="timer" id="timer">زمان باقی‌مانده: 06:40</div>
-        <div class="cards-container">
-            <div class="card" id="card1"></div>
-            <div class="card" id="card2"></div>
-            <div class="card" id="card3"></div>
-        </div>
-        <div class="number-display" id="numberDisplay">--</div>
-        <button class="start-btn" id="startButton">شروع بازی</button>
         <button class="deposit-btn" id="depositButton">افزایش موجودی</button>
     </div>
 
     <script>
-        let userBalance = 0; // موجودی کاربر
-        const scoreDisplay = document.getElementById("score");
-        const timerDisplay = document.getElementById("timer");
-        const startButton = document.getElementById("startButton");
-        const depositButton = document.getElementById("depositButton");
-        let selectedNumbers = [];
-        let gameFinished = false;
-        let timeLeft = 400;
-        let timerInterval;
-        let numberInterval;
-
-        // فرم ورود
         const loginContainer = document.getElementById("loginContainer");
         const gameContainer = document.getElementById("gameContainer");
         const mobileInput = document.getElementById("mobileInput");
         const passwordInput = document.getElementById("passwordInput");
         const loginButton = document.getElementById("loginButton");
+        const depositButton = document.getElementById("depositButton");
+        const scoreDisplay = document.getElementById("score");
+        let userBalance = 100000;
 
         loginButton.onclick = () => {
             const mobile = mobileInput.value.trim();
@@ -123,22 +82,7 @@
                 return;
             }
 
-            const users = JSON.parse(localStorage.getItem("users") || "{}");
-
-            if (users[mobile]) {
-                if (users[mobile].password === password) {
-                    userBalance = users[mobile].balance;
-                    showGame();
-                } else {
-                    alert("رمز عبور اشتباه است.");
-                }
-            } else {
-                users[mobile] = { password, balance: 100000 };
-                localStorage.setItem("users", JSON.stringify(users));
-                userBalance = 100000;
-                alert("ثبت‌نام با موفقیت انجام شد! ۱۰۰,۰۰۰ تومان به موجودی شما اضافه شد.");
-                showGame();
-            }
+            showGame();
         };
 
         function showGame() {
@@ -150,74 +94,30 @@
         function updateBalance(amount) {
             userBalance += amount;
             scoreDisplay.textContent = `موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
-            saveUserBalance();
         }
 
-        function saveUserBalance() {
-            const mobile = mobileInput.value.trim();
-            const users = JSON.parse(localStorage.getItem("users") || "{}");
-            if (users[mobile]) {
-                users[mobile].balance = userBalance;
-                localStorage.setItem("users", JSON.stringify(users));
-            }
-        }
-
-        // افزودن دکمه افزایش موجودی
         depositButton.onclick = () => {
-            const mobile = mobileInput.value.trim();
-            if (!mobile) {
-                alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
-                return;
-            }
-
-            const depositLink = `https://zarinp.al/toto?mobile=${mobile}`;
-            window.location.href = depositLink;
+            const callbackUrl = encodeURIComponent(window.location.href);
+            const testAmount = 50000; // مبلغ تست
+            alert(`شما به صفحه پرداخت فرضی هدایت شدید.\nپس از پرداخت موفق، موجودی شما به‌روزرسانی می‌شود.`);
+            
+            // شبیه‌سازی موفقیت پرداخت
+            window.location.href = `${callbackUrl}?Status=OK&Amount=${testAmount}`;
         };
 
-        // بررسی پرداخت موفق از پارامترهای URL
         function checkDeposit() {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has("amount")) {
-                const depositAmount = parseInt(urlParams.get("amount"));
+            if (urlParams.has("Status") && urlParams.get("Status") === "OK" && urlParams.has("Amount")) {
+                const depositAmount = parseInt(urlParams.get("Amount"));
                 if (!isNaN(depositAmount) && depositAmount > 0) {
                     updateBalance(depositAmount);
                     alert(`مبلغ ${depositAmount.toLocaleString('fa-IR')} تومان به موجودی شما اضافه شد!`);
+                    window.history.replaceState({}, document.title, window.location.pathname);
                 }
             }
         }
 
         document.addEventListener("DOMContentLoaded", checkDeposit);
-
-        startButton.onclick = () => {
-            if (userBalance <= 0) {
-                alert("موجودی شما برای ادامه بازی کافی نیست!");
-                return;
-            }
-
-            startButton.style.display = "none"; 
-            selectedNumbers = [];
-            gameFinished = false;
-            timeLeft = 400;
-            generateCard("card1");
-            generateCard("card2");
-            generateCard("card3");
-            startTimer();
-            numberInterval = setInterval(generateRandomNumber, 5000);
-        };
-
-        function endGame(isWin) {
-            gameFinished = true;
-            clearInterval(numberInterval);
-            clearInterval(timerInterval);
-            if (isWin) {
-                updateBalance(50000);
-                alert("تبریک! شما برنده شدید!");
-            } else {
-                updateBalance(-50000);
-                alert("زمان شما تمام شد! شما باختید.");
-            }
-            startButton.style.display = "block"; 
-        }
     </script>
 </body>
 </html>
