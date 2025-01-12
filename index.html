@@ -99,7 +99,7 @@
 <body>
     <h1>بازی دبرنا</h1>
     <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
-    <div class="timer" id="timer">زمان باقی‌مانده: 07:00</div>
+    <div class="timer" id="timer">زمان باقی‌مانده: 06:50</div>
     <div class="cards-container">
         <div class="card" id="card1"></div>
         <div class="card" id="card2"></div>
@@ -115,7 +115,7 @@
         const startButton = document.getElementById("startButton");
         let selectedNumbers = [];
         let gameFinished = false;
-        let timeLeft = 420;
+        let timeLeft = 410; // 6 دقیقه و 50 ثانیه
         let timerInterval;
         let numberInterval;
 
@@ -232,11 +232,12 @@
             startButton.style.display = "none"; // مخفی کردن دکمه شروع
             selectedNumbers = [];
             gameFinished = false;
-            timeLeft = 420;
+            timeLeft = 410; // 6 دقیقه و 50 ثانیه
             generateCard("card1");
             generateCard("card2");
             generateCard("card3");
             startTimer();
+            generateRandomNumber(); // تولید اولین عدد تصادفی بلافاصله بعد از شروع بازی
             numberInterval = setInterval(generateRandomNumber, 5000);
         };
 
