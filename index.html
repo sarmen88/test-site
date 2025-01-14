@@ -168,7 +168,7 @@
     </div>
 
     <script>
-        let userBalance = localStorage.getItem('userBalance') ? parseInt(localStorage.getItem('userBalance')) : 100000; // موجودی از localStorage خوانده می‌شود
+        let userBalance = 0; // موجودی کاربر
         const scoreDisplay = document.getElementById("score");
         const timerDisplay = document.getElementById("timer");
         const startButton = document.getElementById("startButton");
@@ -185,7 +185,7 @@
         // تابع به‌روزرسانی موجودی
         function updateBalance(amount) {
             userBalance += amount;
-            localStorage.setItem('userBalance', userBalance); // ذخیره موجودی جدید در localStorage
+            localStorage.setItem(mobileNumber, JSON.stringify({ balance: userBalance, name: userName })); // ذخیره موجودی جدید
             scoreDisplay.textContent = `سلام ${userName}، موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
         }
 
@@ -351,7 +351,7 @@
                 return;
             }
 
-            localStorage.setItem(mobile, JSON.stringify({ name, password }));
+            localStorage.setItem(mobile, JSON.stringify({ name, password, balance: 100000 })); // ذخیره موجودی اولیه
             userName = name;
             mobileNumber = mobile;
             userPassword = password;
@@ -375,6 +375,7 @@
             userName = user.name;
             mobileNumber = mobile;
             userPassword = password;
+            userBalance = user.balance; // بارگذاری موجودی
             alert("ورود موفقیت‌آمیز بود.");
             document.getElementById("loginContainer").style.display = "none";
             document.getElementById("gameContainer").style.display = "block";
