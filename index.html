@@ -85,6 +85,38 @@
             background-color: #6c757d;
             cursor: not-allowed;
         }
+        .form-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+        #gameContainer {
+            display: none;
+        }
         @media (max-width: 768px) {
             .cell {
                 font-size: 1em;
@@ -98,15 +130,42 @@
 </head>
 <body>
     <h1>بازی دبرنا</h1>
-    <div class="score" id="score">موجودی شما: ۱۰۰,۰۰۰ تومان</div>
-    <div class="timer" id="timer">زمان باقی‌مانده: 06:50</div>
-    <div class="cards-container">
-        <div class="card" id="card1"></div>
-        <div class="card" id="card2"></div>
-        <div class="card" id="card3"></div>
+
+    <!-- فرم ورود -->
+    <div id="loginContainer" class="form-container">
+        <h2>ورود</h2>
+        <form id="loginForm">
+            <input type="text" id="loginMobile" name="loginMobile" placeholder="شماره موبایل" required>
+            <input type="password" id="loginPassword" name="loginPassword" placeholder="رمز عبور" required>
+            <button type="submit">ورود</button>
+        </form>
+        <p>حساب کاربری ندارید؟ <a href="javascript:void(0);" id="showRegister">ثبت نام</a></p>
     </div>
-    <div class="number-display" id="numberDisplay">--</div>
-    <button class="start-btn" id="startButton">شروع بازی</button>
+
+    <!-- فرم ثبت نام -->
+    <div id="registerContainer" class="form-container" style="display: none;">
+        <h2>ثبت نام</h2>
+        <form id="registerForm">
+            <input type="text" id="name" name="name" placeholder="نام" required>
+            <input type="text" id="mobile" name="mobile" placeholder="شماره موبایل" required>
+            <input type="password" id="registerPassword" name="registerPassword" placeholder="رمز عبور" required>
+            <button type="submit">ثبت نام</button>
+        </form>
+        <p>قبلاً ثبت‌نام کرده‌اید؟ <a href="javascript:void(0);" id="showLogin">ورود</a></p>
+    </div>
+
+    <!-- بازی -->
+    <div id="gameContainer">
+        <div class="score" id="score"></div>
+        <div class="timer" id="timer">زمان باقی‌مانده: 06:50</div>
+        <div class="cards-container">
+            <div class="card" id="card1"></div>
+            <div class="card" id="card2"></div>
+            <div class="card" id="card3"></div>
+        </div>
+        <div class="number-display" id="numberDisplay">--</div>
+        <button class="start-btn" id="startButton">شروع بازی</button>
+    </div>
 
     <script>
         let userBalance = 100000; // موجودی اولیه
@@ -118,12 +177,18 @@
         let timeLeft = 410; // 6 دقیقه و 50 ثانیه
         let timerInterval;
         let numberInterval;
+        let userName;
+        let mobileNumber;
+        let userPassword;
+        let registeredUser = null;
 
+        // تابع به‌روزرسانی موجودی
         function updateBalance(amount) {
             userBalance += amount;
-            scoreDisplay.textContent = `موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
+            scoreDisplay.textContent = `سلام ${userName}، موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
         }
 
+        // تولید کارت‌ها
         function generateCard(cardId) {
             const card = document.getElementById(cardId);
             card.innerHTML = "";
@@ -164,6 +229,7 @@
             });
         }
 
+        // رویداد کلیک روی سلول‌ها
         function handleCellClick(cell, number) {
             if (gameFinished) return;
             if (selectedNumbers.includes(number)) {
@@ -175,6 +241,7 @@
             checkWinCondition();
         }
 
+        // بررسی وضعیت برنده شدن
         function checkWinCondition() {
             const cards = ["card1", "card2", "card3"];
             
@@ -199,6 +266,7 @@
             }
         }
 
+        // شروع تایمر
         function startTimer() {
             timerInterval = setInterval(() => {
                 timeLeft--;
@@ -212,6 +280,7 @@
             }, 1000);
         }
 
+        // تولید عدد تصادفی
         function generateRandomNumber() {
             if (gameFinished) return;
             const number = Math.floor(Math.random() * 90) + 1;
@@ -223,6 +292,7 @@
             }
         }
 
+        // شروع بازی
         startButton.onclick = () => {
             if (userBalance <= 0) {
                 alert("موجودی شما برای ادامه بازی کافی نیست!");
@@ -241,6 +311,7 @@
             numberInterval = setInterval(generateRandomNumber, 5000);
         };
 
+        // پایان بازی
         function endGame(isWin) {
             gameFinished = true;
             clearInterval(numberInterval);
@@ -254,6 +325,51 @@
             }
             startButton.style.display = "block"; // نمایش دوباره دکمه شروع
         }
+
+        // نمایش فرم ثبت‌نام و ورود
+        document.getElementById("showRegister").onclick = () => {
+            document.getElementById("loginContainer").style.display = "none";
+            document.getElementById("registerContainer").style.display = "block";
+        };
+
+        document.getElementById("showLogin").onclick = () => {
+            document.getElementById("registerContainer").style.display = "none";
+            document.getElementById("loginContainer").style.display = "block";
+        };
+
+        // ثبت‌نام
+        document.getElementById("registerForm").onsubmit = (event) => {
+            event.preventDefault();
+            const name = document.getElementById("name").value;
+            const mobile = document.getElementById("mobile").value;
+            const password = document.getElementById("registerPassword").value;
+            localStorage.setItem("userName", name);
+            localStorage.setItem("userMobile", mobile);
+            localStorage.setItem("userPassword", password);
+            alert("ثبت نام موفقیت آمیز بود.");
+            document.getElementById("registerContainer").style.display = "none";
+            document.getElementById("loginContainer").style.display = "block";
+        };
+
+        // ورود
+        document.getElementById("loginForm").onsubmit = (event) => {
+            event.preventDefault();
+            const mobile = document.getElementById("loginMobile").value;
+            const password = document.getElementById("loginPassword").value;
+
+            const storedMobile = localStorage.getItem("userMobile");
+            const storedPassword = localStorage.getItem("userPassword");
+
+            if (mobile === storedMobile && password === storedPassword) {
+                userName = localStorage.getItem("userName");
+                alert("ورود موفقیت آمیز بود.");
+                document.getElementById("loginContainer").style.display = "none";
+                document.getElementById("gameContainer").style.display = "block";
+                updateBalance(0); // نمایش موجودی بعد از ورود
+            } else {
+                alert("اطلاعات وارد شده نادرست است.");
+            }
+        };
     </script>
 </body>
 </html>
