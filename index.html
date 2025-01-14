@@ -345,26 +345,19 @@
             const mobile = document.getElementById("mobile").value;
             const password = document.getElementById("registerPassword").value;
 
-            // بررسی اگر شماره موبایل فقط از اعداد تشکیل شده و 11 رقمی باشد
-            const mobilePattern = /^[0-9]{11}$/;
-
-            if (!mobilePattern.test(mobile)) {
-                alert("شماره موبایل باید فقط از اعداد تشکیل شده و 11 رقمی باشد.");
+            // بررسی اگر شماره موبایل فقط از اعداد تشکیل شده و
+            if (localStorage.getItem(mobile)) {
+                alert("این شماره موبایل قبلاً ثبت شده است.");
                 return;
             }
 
-            // ذخیره اطلاعات کاربر در localStorage
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userMobile', mobile);
-            localStorage.setItem('userPassword', password);
-
+            localStorage.setItem(mobile, JSON.stringify({ name, password }));
             userName = name;
             mobileNumber = mobile;
             userPassword = password;
-
+            alert("ثبت‌نام با موفقیت انجام شد.");
             document.getElementById("registerContainer").style.display = "none";
             document.getElementById("loginContainer").style.display = "block";
-            alert("ثبت‌نام با موفقیت انجام شد.");
         };
 
         // ورود
@@ -373,19 +366,19 @@
             const mobile = document.getElementById("loginMobile").value;
             const password = document.getElementById("loginPassword").value;
 
-            const storedMobile = localStorage.getItem('userMobile');
-            const storedPassword = localStorage.getItem('userPassword');
-
-            if (mobile === storedMobile && password === storedPassword) {
-                userName = localStorage.getItem('userName');
-                userBalance = localStorage.getItem('userBalance') ? parseInt(localStorage.getItem('userBalance')) : 100000;
-                alert("ورود با موفقیت انجام شد.");
-                document.getElementById("loginContainer").style.display = "none";
-                document.getElementById("gameContainer").style.display = "block";
-                scoreDisplay.textContent = `سلام ${userName}، موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
-            } else {
+            const user = JSON.parse(localStorage.getItem(mobile));
+            if (!user || user.password !== password) {
                 alert("شماره موبایل یا رمز عبور اشتباه است.");
+                return;
             }
+
+            userName = user.name;
+            mobileNumber = mobile;
+            userPassword = password;
+            alert("ورود موفقیت‌آمیز بود.");
+            document.getElementById("loginContainer").style.display = "none";
+            document.getElementById("gameContainer").style.display = "block";
+            updateBalance(0); // به‌روزرسانی موجودی
         };
     </script>
 </body>
