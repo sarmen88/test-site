@@ -147,7 +147,7 @@
         <h2>ثبت نام</h2>
         <form id="registerForm">
             <input type="text" id="name" name="name" placeholder="نام" required>
-            <input type="text" id="mobile" name="mobile" placeholder="شماره موبایل" required>
+            <input type="text" id="mobile" name="mobile" placeholder="شماره موبایل" required pattern="\d{11}" title="شماره موبایل باید 11 رقمی باشد و فقط شامل اعداد باشد">
             <input type="password" id="registerPassword" name="registerPassword" placeholder="رمز عبور" required>
             <button type="submit">ثبت نام</button>
         </form>
@@ -344,13 +344,27 @@
             const name = document.getElementById("name").value;
             const mobile = document.getElementById("mobile").value;
             const password = document.getElementById("registerPassword").value;
-            localStorage.setItem("userName", name);
-            localStorage.setItem("userMobile", mobile);
-            localStorage.setItem("userPassword", password);
-            localStorage.setItem('userBalance', userBalance); // ذخیره موجودی در هنگام ثبت‌نام
-            alert("ثبت نام موفقیت آمیز بود.");
+
+            // بررسی اگر شماره موبایل فقط از اعداد تشکیل شده و 11 رقمی باشد
+            const mobilePattern = /^[0-9]{11}$/;
+
+            if (!mobilePattern.test(mobile)) {
+                alert("شماره موبایل باید فقط از اعداد تشکیل شده و 11 رقمی باشد.");
+                return;
+            }
+
+            // ذخیره اطلاعات کاربر در localStorage
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userMobile', mobile);
+            localStorage.setItem('userPassword', password);
+
+            userName = name;
+            mobileNumber = mobile;
+            userPassword = password;
+
             document.getElementById("registerContainer").style.display = "none";
             document.getElementById("loginContainer").style.display = "block";
+            alert("ثبت‌نام با موفقیت انجام شد.");
         };
 
         // ورود
@@ -359,17 +373,18 @@
             const mobile = document.getElementById("loginMobile").value;
             const password = document.getElementById("loginPassword").value;
 
-            const storedMobile = localStorage.getItem("userMobile");
-            const storedPassword = localStorage.getItem("userPassword");
+            const storedMobile = localStorage.getItem('userMobile');
+            const storedPassword = localStorage.getItem('userPassword');
 
             if (mobile === storedMobile && password === storedPassword) {
-                userName = localStorage.getItem("userName");
-                alert("ورود موفقیت آمیز بود.");
+                userName = localStorage.getItem('userName');
+                userBalance = localStorage.getItem('userBalance') ? parseInt(localStorage.getItem('userBalance')) : 100000;
+                alert("ورود با موفقیت انجام شد.");
                 document.getElementById("loginContainer").style.display = "none";
                 document.getElementById("gameContainer").style.display = "block";
-                updateBalance(0); // نمایش موجودی بعد از ورود
+                scoreDisplay.textContent = `سلام ${userName}، موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
             } else {
-                alert("اطلاعات وارد شده نادرست است.");
+                alert("شماره موبایل یا رمز عبور اشتباه است.");
             }
         };
     </script>
