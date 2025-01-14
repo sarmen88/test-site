@@ -168,7 +168,7 @@
     </div>
 
     <script>
-        let userBalance = 100000; // موجودی اولیه
+        let userBalance = localStorage.getItem('userBalance') ? parseInt(localStorage.getItem('userBalance')) : 100000; // موجودی از localStorage خوانده می‌شود
         const scoreDisplay = document.getElementById("score");
         const timerDisplay = document.getElementById("timer");
         const startButton = document.getElementById("startButton");
@@ -185,6 +185,7 @@
         // تابع به‌روزرسانی موجودی
         function updateBalance(amount) {
             userBalance += amount;
+            localStorage.setItem('userBalance', userBalance); // ذخیره موجودی جدید در localStorage
             scoreDisplay.textContent = `سلام ${userName}، موجودی شما: ${userBalance.toLocaleString('fa-IR')} تومان`;
         }
 
@@ -346,6 +347,7 @@
             localStorage.setItem("userName", name);
             localStorage.setItem("userMobile", mobile);
             localStorage.setItem("userPassword", password);
+            localStorage.setItem('userBalance', userBalance); // ذخیره موجودی در هنگام ثبت‌نام
             alert("ثبت نام موفقیت آمیز بود.");
             document.getElementById("registerContainer").style.display = "none";
             document.getElementById("loginContainer").style.display = "block";
